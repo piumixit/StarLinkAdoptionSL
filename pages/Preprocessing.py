@@ -6,11 +6,10 @@ import matplotlib.pyplot as plt
 # Page configuration
 st.set_page_config(
     page_title="Data Preprocessing",
-    page_icon="🧹",
     layout="wide"
 )
 
-st.title("🧹 Data Preprocessing")
+st.title("Data Preprocessing")
 st.write("Analyze and handle missing values in your dataset")
 
 # Session state to store the processed dataframe
