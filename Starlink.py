@@ -71,4 +71,5 @@ elif page == "EDA":
         st.info("Please upload a CSV file to begin EDA")
 
 elif page == "Data Preprocessing":
-    st.switch_page("./pages/Preprocessing.py")
+    from pages import Preprocessing  
+    Preprocessing.show()
