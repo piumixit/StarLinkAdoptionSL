@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 # Page configuration
 st.set_page_config(
-    page_title="Data Preprocessing",
+    page_title="Preprocessing",
     layout="wide"
 )
 
