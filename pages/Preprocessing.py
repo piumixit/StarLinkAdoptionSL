@@ -3,6 +3,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+def main():
+    st.title("Data Preprocessing")
+    # Your preprocessing code here
+
+# This makes the page work both as standalone and as module
+if __name__ == "__main__":
+    main()
+    
 # Page configuration
 st.set_page_config(
     page_title="Preprocessing",
