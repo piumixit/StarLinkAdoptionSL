@@ -12,7 +12,7 @@ if page == "Home":
     st.write("Welcome to the main page!")
     
 elif page == "EDA":
-    st.title("Exploratory Data Analysis")
+    st.title("Starlink Exploratory Data Analysis")
     st.write("Simple EDA with Streamlit")
     
     # File upload
