@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Navigation
-page = st.sidebar.selectbox("Choose a page", ["Home", "EDA"])
+page = st.sidebar.selectbox("Choose a page", ["Home", "EDA", "Data Preprocessing"])
 
 if page == "Home":
     st.title("Main App")
@@ -69,3 +69,6 @@ elif page == "EDA":
                     st.pyplot(fig)
     else:
         st.info("Please upload a CSV file to begin EDA")
+
+elif page == "Data Preprocessing":
+    st.switch_page("pages/Preprocessing.py")
