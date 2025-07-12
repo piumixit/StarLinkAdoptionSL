@@ -4,9 +4,11 @@ import pandas as pd
 import numpy as np
 import joblib
 import io
+import shap # Import shap for explanation plot
+
 
 # Load the pre-trained model and explainer (cached for efficiency)
-
+@st.cache_resource
 def load_model_and_explainer(model_path="starlink_final_model.pkl"):
     """Loads the final model."""
     try:
@@ -18,14 +20,48 @@ def load_model_and_explainer(model_path="starlink_final_model.pkl"):
     # explainer_path="starlink_explainer.pkl" # Explainer loading is handled in modeling page if needed
 
 # Function to create a DataFrame for a single row with all necessary columns
-def create_inference_dataframe(input_data, all_columns):
+def create_inference_dataframe(input_data, all_columns, sample_df_dtypes):
     """Creates a DataFrame for a single inference request."""
-    # Initialize with NaN for all expected columns
-    row_data = {col: np.nan for col in all_columns}
-    # Update with provided input data
-    row_data.update(input_data)
-    # Ensure the order of columns matches the training data
-    new_row = pd.DataFrame({k: [v] for k, v in row_data.items()}).reindex(columns=all_columns)
+    # Initialize with appropriate default values based on dtype
+    row_data = {}
+    for col in all_columns:
+        if col in input_data:
+            row_data[col] = input_data[col]
+        else:
+            # Use appropriate default based on dtype
+            dtype = sample_df_dtypes.get(col)
+            if dtype in ['object', 'category']:
+                row_data[col] = "" # Default to empty string for categorical
+            elif dtype in ['int64', 'float64', 'int32', 'float32']:
+                 row_data[col] = np.nan # Default to NaN for numeric
+            else:
+                row_data[col] = np.nan # Default to NaN for other types
+
+
+    # Ensure the order of columns and data types match the training data
+    # Create a DataFrame and then apply the correct dtypes
+    new_row = pd.DataFrame({k: [v] for k, v in row_data.items()})
+
+    # Reindex columns to ensure order and presence of all expected columns
+    new_row = new_row.reindex(columns=all_columns)
+
+    # Ensure dtypes match the sample DataFrame used during training
+    for col in all_columns:
+        if col in new_row.columns and col in sample_df_dtypes:
+            try:
+                 # Attempt to convert to the original dtype, coerce errors
+                 new_row[col] = new_row[col].astype(sample_df_dtypes[col], errors='ignore')
+                 # Handle cases where conversion might result in object type due to NaNs in numeric cols
+                 if pd.api.types.is_numeric_dtype(sample_df_dtypes[col]) and new_row[col].dtype == 'object':
+                      new_row[col] = pd.to_numeric(new_row[col], errors='coerce')
+                 # For categorical, ensure it's treated as object/string if it's not a recognized category
+                 if sample_df_dtypes[col] == 'category' and new_row[col].dtype != 'category':
+                      new_row[col] = new_row[col].astype(str) # Convert to string if not category
+            except Exception as e:
+                 st.warning(f"Could not cast column '{col}' to dtype {sample_df_dtypes[col]}: {e}")
+                 # Fallback to object type if casting fails
+
+
     return new_row
 
 def run_inference_page():
@@ -40,19 +76,19 @@ def run_inference_page():
         st.warning("Model not loaded. Please ensure 'starlink_final_model.pkl' exists.")
         return
 
-    # Define the columns expected by the model's preprocessor
-    # We need access to the original training data columns before preprocessing
-    # A robust way is to save the list of columns during training or load a sample
-    # of the training data to get the column names and dtypes.
-
-    # For simplicity, let's assume we can load the original data file to get column names
+    # Define the columns expected by the model's preprocessor and their dtypes
+    # Load a sample of the original data file to get column names and dtypes
     try:
         sample_df = pd.read_csv('starlink_household_synthetic.csv')
-        # Drop the target and the column dropped during EDA
-        all_columns = sample_df.drop(columns=['starlink_proxy_adoption', 'roof_persons'], errors='ignore').columns.tolist()
+        # Drop the target and the column dropped during EDA to get input features
+        input_features_df = sample_df.drop(columns=['starlink_proxy_adoption', 'roof_persons'], errors='ignore')
+        all_columns = input_features_df.columns.tolist()
+        sample_df_dtypes = input_features_df.dtypes.to_dict()
+
     except FileNotFoundError:
-        st.error("Could not load sample data to determine expected columns.")
+        st.error("Could not load sample data to determine expected columns and dtypes.")
         return
+
 
     st.subheader("Enter Household Details")
 
@@ -63,16 +99,22 @@ def run_inference_page():
     # Example input fields (add more based on your feature importance analysis)
     col1, col2 = st.columns(2)
 
+    # Get unique values for categorical columns from sample_df to populate selectboxes
+    district_options = sorted(sample_df['district'].unique().tolist())
+    province_options = sorted(sample_df['province'].unique().tolist())
+    urbanization_options = sorted(sample_df['urbanization_level'].unique().tolist())
+
+
     with col1:
         st.write("#### Location & Demographics")
-        district = st.selectbox("District", sorted(sample_df['district'].unique()))
-        province = st.selectbox("Province", sorted(sample_df['province'].unique()))
-        urbanization_level = st.selectbox("Urbanization Level", sorted(sample_df['urbanization_level'].unique()))
+        district = st.selectbox("District", district_options)
+        province = st.selectbox("Province", province_options)
+        urbanization_level = st.selectbox("Urbanization Level", urbanization_options)
         members_in_house = st.number_input("Members in Household", min_value=1, value=4, step=1)
         income_lkr = st.number_input("Average Monthly Income (LKR)", min_value=0.0, value=120000.0, step=1000.0)
         roofless_persons = st.number_input("Roofless Persons", min_value=0, value=0, step=1)
         # roof_persons is dropped, calculate it internally if needed but not as input
-        roof_persons = members_in_house - roofless_persons
+        roof_persons = members_in_house - roofless_persons if 'roof_persons' in all_columns else 0 # Calculate only if expected by model
 
     with col2:
         st.write("#### Connectivity & Tech")
@@ -148,7 +190,8 @@ def run_inference_page():
     }
 
     # Create the DataFrame for prediction
-    inference_df = create_inference_dataframe(input_data, all_columns)
+    # Pass sample_df_dtypes to the function
+    inference_df = create_inference_dataframe(input_data, all_columns, sample_df_dtypes)
 
 
     if st.button("Predict Starlink Adoption"):
@@ -188,15 +231,17 @@ def run_inference_page():
                     inference_prep_dense = inference_prep.astype(np.float32)
 
                 # Calculate SHAP values for the single instance
-                if hasattr(model_step, "predict_proba"):
+                # Check if explainer returns a list for classification (TreeExplainer) or a single array (KernelExplainer on proba)
+                if isinstance(explainer.expected_value, list): # Likely classification with TreeExplainer
                     shap_values_instance = explainer.shap_values(inference_prep_dense)[1] # Get values for positive class
-                    expected_value = explainer.expected_value[1] if isinstance(explainer.expected_value, list) else explainer.expected_value
-                else:
+                    expected_value = explainer.expected_value[1]
+                else: # Likely regression or KernelExplainer on proba (single output)
                      shap_values_instance = explainer.shap_values(inference_prep_dense)
                      expected_value = explainer.expected_value
 
 
                 # Get feature names after preprocessing
+                # Ensure feature names from the preprocessor are used
                 feature_names = final_model.named_steps["prep"].get_feature_names_out()
                  # Create a DataFrame for the instance with correct column names
                 inference_plot_df = pd.DataFrame(inference_prep_dense, columns=feature_names)
@@ -209,6 +254,7 @@ def run_inference_page():
 
                 # Let's use the matplotlib version for simplicity in Streamlit
                 fig_instance_force, ax_instance_force = plt.subplots(figsize=(10, 3))
+                # Ensure feature names are passed to force_plot for better readability
                 shap.force_plot(expected_value, shap_values_instance, inference_plot_df.iloc[0], matplotlib=True, show=False, ax=ax_instance_force)
                 plt.tight_layout()
                 st.pyplot(fig_instance_force)
