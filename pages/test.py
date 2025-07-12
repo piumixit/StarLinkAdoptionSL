@@ -58,10 +58,39 @@ def run_eda_page():
 
     with tab2:  # Distributions tab
         # Feature Distributions
+        # st.subheader("Feature Distributions")
+        # fig = plt.figure(figsize=(15, 10))
+        # df1[feature_columns].hist(bins=30, color="skyblue", edgecolor='black')
+        # plt.suptitle("Feature Distributions", fontsize=16)
+        # plt.tight_layout()
+        # st.pyplot(fig)
+        # plt.close(fig)
+
+        # Feature Distributions - Fixed and Enhanced Version
         st.subheader("Feature Distributions")
-        fig = plt.figure(figsize=(15, 10))
-        df1[feature_columns].hist(bins=30, color="skyblue", edgecolor='black')
-        plt.suptitle("Feature Distributions", fontsize=16)
+        
+        # Create figure and axes explicitly
+        fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(15, 10))
+        axes = axes.flatten()  # Flatten for easy iteration
+        
+        # Plot each feature's histogram
+        for i, col in enumerate(feature_columns):
+            axes[i].hist(df1[col], bins=30, color="skyblue", edgecolor='black')
+            axes[i].set_title(col, fontsize=12)
+            axes[i].set_xlabel('Value')
+            axes[i].set_ylabel('Frequency')
+            
+            # Add grid for better readability
+            axes[i].grid(True, linestyle='--', alpha=0.7)
+            
+            # Rotate x-axis labels if needed
+            axes[i].tick_params(axis='x', rotation=45)
+        
+        # Hide any empty subplots if we have fewer than 6 features
+        for j in range(i+1, len(axes)):
+            fig.delaxes(axes[j])
+        
+        plt.suptitle("Feature Distributions", fontsize=16, y=1.02)
         plt.tight_layout()
         st.pyplot(fig)
         plt.close(fig)
