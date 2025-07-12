@@ -6,3 +6,4 @@ seaborn
 joblib>=1.3.0
 shap
 xgboost
+scikit-learn
