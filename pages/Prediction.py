@@ -184,6 +184,10 @@ def main():
                     "Broadband Satisfaction": bb_satisfaction
                 }
                 st.write(pd.DataFrame.from_dict(factors, orient='index', columns=['Value']))
+            # Clear prediction button
+            if st.button("Clear Prediction"):
+                reset_form()
+                st.rerun()
             
         except Exception as e:
             st.error(f"Prediction failed: {str(e)}")
