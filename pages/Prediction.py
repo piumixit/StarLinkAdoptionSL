@@ -1,9 +1,30 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+import joblib
+
+# --- Load model and input columns ---
+@st.cache_resource
+def load_model_and_columns():
+    model = joblib.load("final_model.pkl")  # Your trained model
+    df1 = pd.read_csv("df1_sample.csv")     # Must include 'starlink_proxy_adoption' column
+    all_cols = df1.columns.drop("starlink_proxy_adoption").tolist()
+    return model, all_cols
+
+final_model, all_cols = load_model_and_columns()
+
+# --- UI Header ---
+st.set_page_config(page_title="Starlink Predictor", layout="wide")
+st.title("🌐 Starlink Adoption Probability")
+st.markdown("Enter household data below to estimate the likelihood of adopting Starlink.")
+
+# --- User Input Form ---
 with st.form("user_input_form"):
     st.subheader("🏠 Household & Location Info")
-    household_id = st.text_input("Household ID", "NEW-0001" if st.session_state.reset_form else "")
-    district = st.selectbox("District", ["Galle", "Colombo", "Kandy", "Jaffna"], index=0)
-    province = st.selectbox("Province", ["Southern", "Western", "Central", "Northern"], index=0)
-    urbanization_level = st.selectbox("Urbanization Level", ["Urban", "Suburban", "Rural"], index=2)
+    household_id = st.text_input("Household ID", "NEW-0001")
+    district = st.selectbox("District", ["Galle", "Colombo", "Kandy", "Jaffna"])  # Modify as needed
+    province = st.selectbox("Province", ["Southern", "Western", "Central", "Northern"])
+    urbanization_level = st.selectbox("Urbanization Level", ["Urban", "Suburban", "Rural"])
     members_in_house = st.number_input("Household Members", min_value=1, step=1, value=4)
     roofless_persons = st.number_input("Roofless Persons", min_value=0, step=1, value=0)
     roof_persons = st.number_input("Roofed Persons", min_value=0, step=1, value=4)
@@ -42,21 +63,11 @@ with st.form("user_input_form"):
     starlink_awareness = st.checkbox("Aware of Starlink?", value=True)
     starlink_prob_proxy = st.slider("Starlink Proxy Probability (0-1)", 0.0, 1.0, 0.42)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        submitted = st.form_submit_button("🔮 Predict")
-    with col2:
-        reset = st.form_submit_button("🧹 Clear Data")
+    submitted = st.form_submit_button("🔮 Predict")
 
-# --- Form Reset Logic ---
-if reset:
-    st.session_state.reset_form = True
-    st.experimental_rerun()
-
-# --- Prediction Logic ---
+# --- Process Input and Predict ---
 if submitted:
-    st.session_state.reset_form = False  # Clear reset flag
-
+    # Construct data dict
     input_data = {
         "household_id": household_id,
         "district": district,
@@ -89,10 +100,15 @@ if submitted:
         "starlink_prob_proxy": starlink_prob_proxy,
     }
 
+    # Fill missing model columns
     for col in all_cols:
         input_data.setdefault(col, np.nan)
 
-    new_row = pd.DataFrame({k: [v] for k, v in input_data.items()}).reindex(columns=all_cols)
+    # Create DataFrame
+    new_row = pd.DataFrame({k: [v] for k, v in input_data.items()}) \
+                .reindex(columns=all_cols)
+
+    # Predict
     pred_prob = final_model.predict_proba(new_row)[0, 1]
 
     st.success(f"✅ **Predicted Starlink Adoption Probability: {pred_prob:.2%}**")
