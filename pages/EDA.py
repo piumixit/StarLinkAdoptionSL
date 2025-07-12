@@ -28,7 +28,7 @@ def run_eda_page():
     #st.text(info_str)
 
     st.subheader("Data")
-    st.dataframe(df1.head())
+    st.dataframe(df1.describe())
 
     st.subheader("Numeric Summary")
     st.dataframe(df1.describe().T)
