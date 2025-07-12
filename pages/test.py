@@ -82,12 +82,12 @@ def run_eda_page():
     with tab3:  # Relationships tab
         # Pairplot
         st.subheader("Pairwise Feature Relationships")
-        fig = sns.pairplot(df1[feature_columns + [adoption_col]],
+        pair_grid = sns.pairplot(df1[feature_columns + [adoption_col]],
                          hue=adoption_col,
                          palette="husl", plot_kws={"alpha": 0.6, "s": 30})
-        fig.fig.suptitle("Pairwise Feature Relationships", y=1.02)
-        st.pyplot(fig)
-        plt.close(fig)
+        pair_grid.fig.suptitle("Pairwise Feature Relationships", y=1.02)
+        st.pyplot(pair_grid.fig)
+        plt.close(pair_grid.fig)
 
     with tab4:  # Urbanization tab
         # Urbanization Analysis
