@@ -5,9 +5,7 @@ import matplotlib.pyplot as plt
 
 def main():
     st.title("Data Preprocessing")
-    # Your preprocessing code here
 
-# This makes the page work both as standalone and as module
 if __name__ == "__main__":
     main()
     
@@ -17,7 +15,6 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("Data Preprocessing")
 st.write("Analyze and handle missing values in your dataset")
 
 # Session state to store the processed dataframe
