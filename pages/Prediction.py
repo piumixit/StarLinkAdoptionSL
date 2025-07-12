@@ -121,7 +121,7 @@ if submitted:
         "starlink_prob_proxy": starlink_prob_proxy,
     }
 
-    # Ensure that missing columns are added with NaN
+ 
     for col in all_cols:
         input_data.setdefault(col, np.nan)
 
