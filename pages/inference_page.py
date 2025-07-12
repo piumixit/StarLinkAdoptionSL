@@ -6,7 +6,7 @@ import joblib
 import io
 
 # Load the pre-trained model and explainer (cached for efficiency)
-@st.cache_resource
+
 def load_model_and_explainer(model_path="starlink_final_model.pkl"):
     """Loads the final model."""
     try:
