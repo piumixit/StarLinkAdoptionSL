@@ -6,11 +6,10 @@ import seaborn as sns
 import io
 
 def run_eda_page():
-    """Code for the EDA page."""
     st.title("Exploratory Data Analysis")
 
     # Load the dataset
-    file_path = 'starlink_household_synthetic.csv' # Assuming the file is in the same directory as app.py
+    file_path = 'starlink_household_synthetic.csv' 
     try:
         df1 = pd.read_csv(file_path)
         st.success("Dataset loaded successfully.")
@@ -19,17 +18,17 @@ def run_eda_page():
         return
 
     st.subheader("Dataset Information")
-    st.write("Dataset shape:", df1.shape)
+    #st.write("Dataset shape:", df1.shape)
 
     # Capture df.info() output
-    buffer = io.StringIO()
-    df1.info(buf=buffer)
-    info_str = buffer.getvalue()
-    st.write("\nColumn data types and non-null counts:")
-    st.text(info_str)
+    #buffer = io.StringIO()
+    #df1.info(buf=buffer)
+    #info_str = buffer.getvalue()
+    #st.write("\nColumn data types and non-null counts:")
+    #st.text(info_str)
 
-    st.subheader("First 15 Rows")
-    st.dataframe(df1.head(15))
+    st.subheader("Data")
+    st.dataframe(df1.head())
 
     st.subheader("Numeric Summary")
     st.dataframe(df1.describe().T)
