@@ -6,8 +6,8 @@ import joblib
 # --- Load model and input columns ---
 @st.cache_resource
 def load_model_and_columns():
-    model = joblib.load("final_model.pkl")  # Your trained model
-    df1 = pd.read_csv("df1_sample.csv")     # DataFrame with your existing data
+    model = joblib.load("starlink_final_model.pkl")  # Your trained model
+    df1 = pd.read_csv("starlink_household_synthetic.csv")     # DataFrame with your existing data
     all_cols = df1.columns.drop("starlink_proxy_adoption").tolist()
     return model, df1, all_cols
 
