@@ -13,6 +13,14 @@ def load_model_and_explainer(model_path="starlink_final_model.pkl"):
     """Loads the final model."""
     try:
         model = joblib.load(model_path)
+        if not hasattr(model, 'named_steps'):
+            from sklearn.impute import SimpleImputer
+            from sklearn.pipeline import make_pipeline
+            model = make_pipeline(
+                SimpleImputer(strategy='median'),  
+                model
+            )
+            
         return model
     except FileNotFoundError:
         st.error(f"Error: Model file not found at {model_path}")
