@@ -53,11 +53,6 @@ def run_eda_page():
     st.pyplot(fig)
     plt.close(fig) # Close the figure
 
-    st.subheader("Dropping Unnecessary Columns")
-    df1 = df1.drop(columns=['roof_persons'], errors='ignore') # Use errors='ignore' in case it was already dropped
-    st.write("Dropped 'roof_persons' column.")
-    st.dataframe(df1.head(2)) # Display head after dropping
-
     st.subheader("Target-Conditioned Box/Violin Plots")
     numeric_after_drop = df1.select_dtypes(include=["int64", "float64"])
     # Select a subset of numeric columns for plotting to avoid too many plots
