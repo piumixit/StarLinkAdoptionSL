@@ -27,8 +27,8 @@ def run_eda_page():
     #st.write("\nColumn data types and non-null counts:")
     #st.text(info_str)
 
-    st.subheader("Data")
-    st.dataframe(df1)
+    #st.subheader("Data")
+    #st.dataframe(df1)
 
     st.subheader("Numeric Summary")
     st.dataframe(df1.describe().T)
