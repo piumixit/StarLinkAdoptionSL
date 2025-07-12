@@ -57,27 +57,51 @@ def run_eda_page():
         plt.close(fig)
 
     with tab2:  # Distributions tab
-        # Feature Distributions
-        st.subheader("Feature Distributions")
-        fig = plt.figure(figsize=(15, 10))
-        df1[feature_columns].hist(bins=30, color="skyblue", edgecolor='black')
-        plt.suptitle("Feature Distributions", fontsize=16)
-        plt.tight_layout()
-        st.pyplot(fig)
-        plt.close(fig)
+    # Feature Distributions - Improved version
+    st.subheader("Feature Distributions")
+    
+    # Option 1: Using matplotlib's hist directly
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+    axes = axes.ravel()  # Flatten the axes array for easy iteration
+    
+    for i, col in enumerate(feature_columns):
+        axes[i].hist(df1[col], bins=30, color="skyblue", edgecolor='black')
+        axes[i].set_title(col)
+        axes[i].set_xlabel('Value')
+        axes[i].set_ylabel('Frequency')
+    
+    plt.tight_layout()
+    st.pyplot(fig)
+    plt.close(fig)
+    
+    # Alternative Option 2: Using Seaborn's displot (commented out)
+    # st.subheader("Alternative Feature Distributions (Seaborn)")
+    # for col in feature_columns:
+    #     fig, ax = plt.subplots(figsize=(8, 4))
+    #     sns.histplot(data=df1, x=col, bins=30, kde=True, color="skyblue")
+    #     plt.title(f"Distribution of {col}")
+    #     plt.tight_layout()
+    #     st.pyplot(fig)
+    #     plt.close(fig)
 
-        # Boxplots by Adoption Status
-        st.subheader("Feature Distributions by Adoption Status")
-        fig = plt.figure(figsize=(18, 10))
-        for i, col in enumerate(feature_columns):
-            plt.subplot(2, 3, i + 1)
-            sns.boxplot(data=df1, x=adoption_col, y=col, palette="Set2")
-            plt.title(f"{col} by Adoption Status")
-            plt.xlabel("")
-            plt.ylabel(col)
-        plt.tight_layout()
-        st.pyplot(fig)
-        plt.close(fig)
+    # Boxplots by Adoption Status
+    st.subheader("Feature Distributions by Adoption Status")
+    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+    axes = axes.ravel()
+    
+    for i, col in enumerate(feature_columns):
+        sns.boxplot(data=df1, x=adoption_col, y=col, palette="Set2", ax=axes[i])
+        axes[i].set_title(f"{col} by Adoption Status")
+        axes[i].set_xlabel("")
+        axes[i].set_ylabel(col)
+    
+    # Hide any empty subplots if we have fewer than 6 features
+    for j in range(i+1, len(axes)):
+        fig.delaxes(axes[j])
+    
+    plt.tight_layout()
+    st.pyplot(fig)
+    plt.close(fig)
 
     with tab3:  # Relationships tab
         # Pairplot
